@@ -1,13 +1,3 @@
-#proj1
-#1. read the input file: create an array with 32bit instructions
-#2. go through line by line
-#3. check the opcode & depending on the opcode choose format
-#4. read func and determine the operation --> start saving to a string
-#5. look at the registers and immediates if necessary
-#6. print out the output
-#have a variable to count which operation is being done at the moment
-#go through a while loop? and read all lines
-
 import sys
 
 #read binary file
@@ -19,29 +9,23 @@ def read_binary_file(file_path):
                 line = binary_file.read(4) #read 4 bytes each 
                 if not line:
                     break
-                decimal = int.from_bytes(line, byteorder='little', signed = False) #convert to decimal
-                binary_value = format(decimal, '032b') # convert back to binary
-                #binary = "{0:32b}".format(decimal) 
+                decimal_value = int.from_bytes(line, byteorder='little', signed = False) #convert to decimal
+                binary_value = format(decimal_value, '032b') # convert back to binary (big endian)
                 binary.append(binary_value) #add the binary into the binary_data
 
         return binary
 
 #converts binary to hexadecimal
 def convert_to_hex(binary):
-    #return binascii.hexlify(int(binary))
-    #prints without 0x and padded to match 8 digits
-    return hex(int(binary, 2))[2:].zfill(8)
+    return hex(int(binary, 2))[2:].zfill(8) #prints without 0x and padded to match 8 digits
 
 #converts signed binary string to decimal
 def to_twos_comp(binary_str, bits):
     val = int(binary_str, 2)
-    #CHECK THIS !!!!!!!!!!!!
-    if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
+    if (val & (1 << (bits - 1))) != 0: # if sign bit is = 1
         val = val - (1 << bits)        # compute negative value
     return val  
 
-# add, sub, sll, slt, stlu, xor, srl, sra, or, and --> opcode = 0110011
-# slli srli srai --> opcode = 0010011 (rs2 --> shamt)
 def r_format_disassemble(binary, opcode):
     #funct3 and funct 7 saves as string
     funct7 = binary[:7]
@@ -94,10 +78,6 @@ def r_format_disassemble(binary, opcode):
 
     return assembly
 
-    
-#lb, lh, lw, lbu, lhu --> opcode = 0000011
-#addi, slti, sltiu, xori, ori, andi --> opcode = 0010011
-#jalr --> opcode = 1100111
 def i_format_disassemble(binary, opcode):
     #funct3 saved as string
     funct3 = binary[17:20]
@@ -148,7 +128,6 @@ def i_format_disassemble(binary, opcode):
 
     return assembly
 
-#sb, sh, sw --> opcode = 0100011
 def s_format_disassemble(binary):
     #funct3 saved as string
     funct3 = binary[17:20]
@@ -176,7 +155,6 @@ def s_format_disassemble(binary):
    
     return assembly
 
-#beq, bne, blt, bge, bltu, bgeu --> opcode = 1100011
 def sb_format_disassemble(binary):
     #funct3 saved as string 
     funct3 = binary[17:20]
@@ -210,7 +188,6 @@ def sb_format_disassemble(binary):
 
     return assembly
 
-#jal --> opcode = 1101111
 def uj_format_disassemble(binary):
     #register saved as int
     rd = int(binary[20:25], 2)
@@ -222,9 +199,7 @@ def uj_format_disassemble(binary):
     assembly = 'jal x' + str(rd) + ", " + str(immediate)
 
     return assembly
-                   
-# lui --> opcode = 0110111
-# auipc --> opcode = 0010111
+
 def u_format_disassemble(binary, opcode):
     #register saved as int
     rd = int(binary[20:25], 2)
@@ -291,20 +266,10 @@ def disassemble(binary_line, opcode):
 file_name = sys.argv[1]
 binary_data = read_binary_file(file_name)
 
-'''
-#checks if binary values are being printed properly  
-for value in binary_data:
-    #print(value)
-    print(convert_to_hex(value))
-'''
+count = 0 #count the number of instructions
 
-#count the number of instructions
-count = 0
-
-#loop through each binary line elem in binary_data
+#loop through each binary_line elem in binary_data
 for binary_line in binary_data:
-    #the binary_line is the line we are disassembling
-    #binary_line is a string
     hexa = convert_to_hex(binary_line) # converting the binary into hexa
 
     #extracting opcode
